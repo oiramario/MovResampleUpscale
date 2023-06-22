@@ -1,4 +1,4 @@
-# stable-diffusion-webui-extension-templates
+# sd-webui-upscaler
 
 a template of stable-diffusion-webui extension for understand and develop  quickly 
 
