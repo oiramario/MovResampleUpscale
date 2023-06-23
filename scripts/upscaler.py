@@ -6,7 +6,7 @@ from datetime import datetime
 
 import gradio as gr
 import modules
-from modules.ui_common import folder_symbol, plaintext_to_html
+from modules.ui_common import folder_symbol
 
 # directory of the outputs
 sd_path = pathlib.Path().absolute()
@@ -36,9 +36,8 @@ def work_folder(src_video):
     return work_dir
 
 
-def upscale_gen(src_video, scale_factor):
+def upscale_gen(src_video, scale_factor, const_rate_factor):
     if not src_video:
-        print('select a video first...')
         return
 
     # check ffmpeg
@@ -51,29 +50,35 @@ def upscale_gen(src_video, scale_factor):
     # get bit_rate, fps
     result = subprocess.run(f'ffmpeg -i "{src_video}"', capture_output=True)
     output = result.stderr.decode()
-    match = re.search(r"(\d+) kb/s, (\d+) fps", output)
+    match = re.search(r"(\d+) fps", output)
     if not match:
         print('ffmpeg cannot get video infomation...')
         return
-    bit_rate = int(match.group(1))
-    fps = int(match.group(2))
+    fps = int(match.group(1))
 
     # create directories
     work_dir = work_folder(src_video)
     frames_path = os.path.join(work_dir, 'frames')
+    images = os.path.join(frames_path, '%5d.png')
     if not os.path.exists(frames_path):
         os.makedirs(frames_path)
+        # extract images from video
+        if 0 != os.system(f'ffmpeg -r {fps} -i "{src_video}" "{images}"'):
+            return
 
-    # extract frames from video
-    frames = os.path.join(frames_path, '%5d.png')
-    if 0 != os.system(f'ffmpeg -r {fps} -i "{src_video}" "{frames}"'):
-        return
-
-    # merge frames to video
+    # video filename -> scale_rate_time.mp4
     current = datetime.now().strftime("%H_%M_%S")
-    dst_path = os.path.join(work_dir, f'{scale_factor}x-{current}.mp4')
-    # -b:v {bit_rate}k
-    if 0 != os.system(f'ffmpeg -y -r {fps} -i "{frames}" -c:v libx264 -pix_fmt yuv420p "{dst_path}"'):
+    args = f'-r {fps} -i "{images}" -c:v libx264 -pix_fmt yuv420p'
+    # bitrate
+    if const_rate_factor > 0:
+        factors = [18, 21, 24, 27]
+        crf = factors[const_rate_factor - 1]
+        dst_path = os.path.join(work_dir, f'{scale_factor}x_{crf}-{current}.mp4')
+        args += f' -crf {crf}'
+    else:
+        dst_path = os.path.join(work_dir, f'{scale_factor}x_auto-{current}.mp4')
+    # merge frames to video
+    if 0 != os.system(f'ffmpeg -y {args} "{dst_path}"'):
         return
 
     return dst_path
@@ -100,7 +105,9 @@ def on_ui_tabs():
             with gr.Column():
                 src_video = gr.Video(interactive=True, label='Original')
                 with gr.Row():
-                    scale_factor = gr.Slider(minimum=1, maximum=16, step=0.1, value=2, label='Scale Factor')
+                    const_rate_factor = gr.Radio(["Auto", "Ultra(18)", "High(21)", "Good(24)", "Medium(27)"], value="Auto", type="index", label = "Constant Rate Factor:")
+                    scale_factor = gr.Slider(minimum=1, maximum=16, step=0.1, value=2, label='Scale factor:')
+                with gr.Row():
                     btn_generate = gr.Button('Generate', variant='primary')
 
             with gr.Column():
@@ -113,7 +120,7 @@ def on_ui_tabs():
 
         btn_generate.click(
             fn=upscale_gen, 
-            inputs=[src_video, scale_factor], 
+            inputs=[src_video, scale_factor, const_rate_factor], 
             outputs=dst_video, 
             show_progress=True)
 
