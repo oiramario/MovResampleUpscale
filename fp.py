@@ -1,55 +1,53 @@
-import ffmpeg
-import os
 import datetime
+import os
 
-def process_video(media_path, output_path, scale, steps):
+import ffmpeg
+
+import module.grid as grid
+import module.keyframe as keyframe
+import module.media as media
+
+
+def process_video(media_path, output_path, scale_factor=2.0, steps=20, grid_rows=2, grid_cols=2):
     if not os.path.isfile(media_path) or not os.path.isdir(output_path):
         return
 
     # stream infomation
-    media_probe = ffmpeg.probe(media_path, hide_banner=None) # , count_frames=None
+    media_probe = ffmpeg.probe(media_path, hide_banner=None)
     video_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'video'), None)
     if not video_stream:
         return
-    time = float(video_stream['duration']) // 2
-    width = video_stream['width']
-    height = video_stream['height']
+
+    # video properties
+    frame_width = video_stream['width']
+    frame_height = video_stream['height']
     frame_rate = eval(video_stream['avg_frame_rate'])
-    count_frames = None if 'nb_read_frames' not in video_stream else int(video_stream['nb_read_frames'])
+
+    # work path
+    output_media_name = f'{scale_factor}x-{datetime.datetime.now().strftime("%H_%M_%S")}'
+    work_path = os.path.join(output_path, output_media_name)
 
     # extract streams from media
-    frames_path = os.path.join(output_path, 'frames')
+    frames_path = os.path.join(work_path, 'frames')
     if not os.path.exists(frames_path):
         os.makedirs(frames_path)
-    input_media = ffmpeg.input(media_path)
-    output_streams = [input_media.output(os.path.join(frames_path, '%05d.png'))]
-    audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
-    if audio_stream:
-        output_streams.append(input_media.output(os.path.join(output_path, 'audio.mp3')))
-    if len(output_streams) > 1:
-        output_node = ffmpeg.merge_outputs(*output_streams)
-    else:
-        output_node = output_streams[0]
-    output_args = ['-hide_banner']
-    output_node.overwrite_output().global_args(*output_args).run()
+    audio_path = work_path
+    media.extract(media_probe, media_path, frames_path, audio_path)
 
-    # 
-    current = f'{scale}x-{datetime.datetime.now().strftime("%H_%M_%S")}'
-    output_media_path = os.path.join(output_path, current)
-    if not os.path.exists(output_media_path):
-        os.makedirs(output_media_path)
+    # detect key frames
+    keyframes_path = os.path.join(work_path, 'keyframes')
+    if not os.path.exists(keyframes_path):
+        os.makedirs(keyframes_path)
+    keyframe.extract(frames_path, keyframes_path, 0.3)
 
-    # merge streams to media
-    input_streams = [ffmpeg.input(os.path.join(frames_path, '%05d.png'), framerate=frame_rate, pix_fmt='yuv420p')]
-    if audio_stream:
-        input_streams.append(ffmpeg.input(os.path.join(output_path, 'audio.mp3')))
-    input_args = ['-hide_banner']
-    (
-        ffmpeg
-        .output(*input_streams, os.path.join(output_path, '5.mp4'), vcodec='libx264', pix_fmt='yuv420p') # , crf=18
-        .overwrite_output()
-        .global_args(*input_args)
-        .run()
-    )
+    # grid images
+    grids_path = os.path.join(work_path, 'grids')
+    if not os.path.exists(grids_path):
+        os.makedirs(grids_path)
+    grid.extract(keyframes_path, frame_width, frame_height, grids_path, grid_rows, grid_cols)
 
-process_video(r'F:\ai\test\abc.mp4', r'F:\ai\test', 2.0, 20)
+    # media name -> scale_factor-time.mp4
+    output_media_file = os.path.join(output_path, f'{output_media_name}.mp4')
+    media.merge(media_probe, grids_path, frame_rate, audio_path, output_media_file)
+
+process_video(r'F:\ai\test\1.mp4', r'F:\ai\test\output', 2.0, 20)

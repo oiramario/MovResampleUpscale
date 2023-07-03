@@ -1,7 +1,6 @@
 import os
 import os.path
 import pathlib
-import re
 import subprocess
 from datetime import datetime
 
@@ -43,7 +42,7 @@ class Upscaler:
 
 
     def process(self, src, scale, steps):
-        large_vram = self.vram > 20
+        large_vram = self.vram >= 16
         src_image = Image.open(src)
         result = self.api.img2img(
             images=[src_image], 
