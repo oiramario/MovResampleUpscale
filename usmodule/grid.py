@@ -11,7 +11,7 @@ def extract(keyframes_path, frame_width, frame_height, grids_path, grid_rows=2, 
     grid_count = math.ceil(image_count / 4)
     grid_size = grid_rows * grid_cols
     quotient, remainder = divmod(image_count, grid_size)
-    pbar = tqdm(total=grid_count, unit='frame')
+    pbar = tqdm(total=grid_count, unit='grid')
     grid_width = grid_cols * frame_width
     grid_height = grid_rows * frame_height
     grid_image = Image.new('RGB', (grid_width, grid_height))

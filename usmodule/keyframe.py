@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import peakutils
 from PIL import Image
+from tqdm import tqdm
 
 
 def scale(img, xScale, yScale):
@@ -27,6 +28,8 @@ def extract(frames_path, keyframes_path, Thres):
     full_color = []
     lastFrame = None
     
+    pbar = tqdm(total=len(image_paths), unit='keyframe')
+
     for frame_number, frame_file in enumerate(image_paths):
         frame = Image.open(os.path.join(frames_path, frame_file))
         blur_gray = convert_frame_to_grayscale(frame)
@@ -39,6 +42,9 @@ def extract(frames_path, keyframes_path, Thres):
         diffMag = cv2.countNonZero(diff)
         lstdiffMag.append(diffMag)
         lastFrame = blur_gray
+        
+        pbar.update(1)
+    pbar.close()
 
     y = np.array(lstdiffMag)
     base = peakutils.baseline(y, 2)
