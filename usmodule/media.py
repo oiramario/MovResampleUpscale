@@ -6,7 +6,7 @@ import ffmpeg
 def extract(media_probe, media_path, frames_path, audio_path):
     # extract streams from media
     input_media = ffmpeg.input(media_path)
-    output_streams = [input_media.output(os.path.join(frames_path, '%05d.png'))]
+    output_streams = [input_media.output(os.path.join(frames_path, '%05d.png'), start_number=0, r=24)]
     audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
     if audio_stream:
         output_streams.append(input_media.output(os.path.join(audio_path, 'audio.mp3')))
@@ -23,16 +23,16 @@ def extract(media_probe, media_path, frames_path, audio_path):
     )
 
 
-def merge(media_probe, frames_path, frame_rate, audio_path, output_media_file):
+def merge(media_probe, frames_path, audio_path, output_media_file):
     # merge streams to media
-    input_streams = [ffmpeg.input(os.path.join(frames_path, '%05d.png'), framerate=frame_rate)]
+    input_streams = [ffmpeg.input(os.path.join(frames_path, '%05d.png'), framerate=24)]
     audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
     if audio_stream:
         input_streams.append(ffmpeg.input(os.path.join(audio_path, 'audio.mp3')))
     input_args = ['-hide_banner']
     (
         ffmpeg
-        .output(*input_streams, output_media_file, vcodec='libx264', pix_fmt='yuv420p', crf=18)
+        .output(*input_streams, output_media_file, vcodec='libx264', pix_fmt='yuv420p')
         .overwrite_output()
         .global_args(*input_args)
         .run()

@@ -50,7 +50,7 @@ def generate(src_video, scale_factor, sampling_steps):
 
     mem_stats = _get_memory_stats()
     vram = mem_stats['total'] / 1024
-    low_vram = vram <= 6
+    low_vram = vram <= 12
     work_dir = work_folder(src_video)
     scaler = Scaler(low_vram)
     return scaler.process_video(src_video, work_dir, scale_factor, sampling_steps)

@@ -8,8 +8,8 @@ from tqdm import tqdm
 def extract(keyframes_path, frame_width, frame_height, grids_path, grid_rows=2, grid_cols=2):
     image_paths = sorted(os.listdir(keyframes_path))
     image_count = len(image_paths)
-    grid_count = math.ceil(image_count / 4)
     grid_size = grid_rows * grid_cols
+    grid_count = math.ceil(image_count / grid_size)
     quotient, remainder = divmod(image_count, grid_size)
     pbar = tqdm(total=grid_count, unit='grid')
     grid_width = grid_cols * frame_width
