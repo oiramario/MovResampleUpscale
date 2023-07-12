@@ -13,7 +13,7 @@ from scripts.scaler import Scaler
 
 # directory of the outputs
 sd_path = pathlib.Path().absolute()
-output_path = os.path.join(sd_path, 'outputs', 'upscaler')
+output_path = os.path.join(sd_path, 'outputs', 'upscale')
 if not os.path.exists(output_path):
     os.makedirs(output_path)
 
@@ -62,7 +62,7 @@ def interrupt():
 
 
 def on_ui_tabs():
-    with gr.Blocks(analytics_enabled=False) as upscaler_interface:
+    with gr.Blocks(analytics_enabled=False) as mov_upscale_interface:
         with gr.Row():
             with gr.Column():
                 with gr.Row():
@@ -103,7 +103,7 @@ def on_ui_tabs():
             inputs=dst_video,
             outputs=download_file)
 
-    return (upscaler_interface, "Upscaler", "upscaler_interface"),
+    return (mov_upscale_interface, "mov-upscale", "mov_upscale_interface"),
 
 
 script_callbacks.on_ui_tabs(on_ui_tabs)

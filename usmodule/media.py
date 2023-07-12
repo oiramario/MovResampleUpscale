@@ -1,6 +1,25 @@
 import os
+from tqdm import tqdm
+import urllib.request
 
 import ffmpeg
+
+
+def download(url, dir):
+    name = os.path.basename(url)
+    path = os.path.join(dir, name)
+    if not os.path.exists(path):
+        request = urllib.request.urlopen(url)
+        total = int(request.headers.get('Content-Length', 0))
+        with tqdm(total=total, desc=f'Downloading: {name}', unit='B', unit_scale=True, unit_divisor=1024) as progress:
+            urllib.request.urlretrieve(url, path, reporthook=lambda count, block_size, total_size: progress.update(block_size))
+
+def check():
+    sd_root = os.getcwd()
+    sd_models = os.path.join(sd_root, 'models', 'Stable-diffusion')
+    download('https://huggingface.co/stabilityai/stable-diffusion-2-1/resolve/main/v2-1_768-ema-pruned.safetensors', sd_models)
+    sr_models = os.path.join(sd_root, 'extensions', 'sd-webui-stablesr', 'models')
+    download('https://huggingface.co/Iceclear/StableSR/resolve/main/webui_768v_139.ckpt', sr_models)
 
 
 def extract(media_probe, media_path, frames_path, audio_path):

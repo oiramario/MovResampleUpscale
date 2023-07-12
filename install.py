@@ -1,6 +1,19 @@
-import launch
+from launch import git_clone, is_installed, run_pip
 
-# TODO: add pip dependency if need extra module only on extension
 
-# if not launch.is_installed("aitextgen"):
-#     launch.run_pip("install aitextgen==0.6.0", "requirements for MagicPrompt")
+def main():
+    print('mov-scale running...')
+    packages = [
+        'webuiapi',
+        'ffmpeg'
+    ]
+    for m in packages:
+        try:
+            if not is_installed(m):
+                run_pip(f'install {m}', f'mov-scale: {m}')
+        except Exception as e:
+            print(e)
+
+
+if __name__ == "__main__":
+    main()
