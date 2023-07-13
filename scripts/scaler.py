@@ -12,6 +12,7 @@ class Scaler:
     interrupt_operation = False
 
     def __init__(self, low_vram):
+        media.check()
         self.low_vram = low_vram
         self.api = webuiapi.WebUIApi()
         options = {}
@@ -86,8 +87,6 @@ class Scaler:
     def process_video(self, media_path, output_path, scale_factor=2.0, sampling_steps=20):
         if not os.path.isfile(media_path) or not os.path.isdir(output_path):
             return
-
-        media.check()
 
         # stream infomation
         media_probe = ffmpeg.probe(media_path)

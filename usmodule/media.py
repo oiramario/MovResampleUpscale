@@ -18,6 +18,8 @@ def check():
     sd_root = os.getcwd()
     sd_models = os.path.join(sd_root, 'models', 'Stable-diffusion')
     download('https://huggingface.co/stabilityai/stable-diffusion-2-1/resolve/main/v2-1_768-ema-pruned.safetensors', sd_models)
+    sd_vae = os.path.join(sd_root, 'models', 'VAE')
+    download('https://huggingface.co/oiramario/StableSR/resolve/main/vqgan_cfw_00011_vae_only.ckpt', sd_vae)
     sr_models = os.path.join(sd_root, 'extensions', 'sd-webui-stablesr', 'models')
     download('https://huggingface.co/Iceclear/StableSR/resolve/main/webui_768v_139.ckpt', sr_models)
 
