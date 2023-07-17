@@ -2,15 +2,15 @@
 
 <img src="shot.png"/>
 
-# comparison
+# Comparison
 ### [comparison1](https://imgsli.com/MTkyNDA2)
 ### [comparison2](https://imgsli.com/MTkyNDEx)
 ### [comparison3](https://imgsli.com/MTkyNDA5)
 
-# orig
+# Original
 
-<div><video controls src="orig.mp4" muted="false"></video></div>
+<div><video controls src="https://github.com/oiramario/sd-webui-mov-upscale/blob/main/orig.mp4" muted="false"></video></div>
 
-# scaled
+# Scaled
 
-<div><video controls src="scaled.mp4" muted="false"></video></div>
+<div><video controls src="https://github.com/oiramario/sd-webui-mov-upscale/blob/main/scaled.mp4" muted="false"></video></div>
