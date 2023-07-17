@@ -8,9 +8,9 @@
 ### [comparison3](https://imgsli.com/MTkyNDA5)
 
 # Original
+https://github.com/oiramario/sd-webui-mov-upscale/assets/9280761/c6ba2197-a879-4006-ab5d-13dee2b5f5d4
 
-<div><video controls src="https://github.com/oiramario/sd-webui-mov-upscale/blob/main/orig.mp4" muted="false"></video></div>
 
 # Scaled
+https://github.com/oiramario/sd-webui-mov-upscale/assets/9280761/85b03ef0-a811-40b8-bc4c-010f4b2b468f
 
-<div><video controls src="https://github.com/oiramario/sd-webui-mov-upscale/blob/main/scaled.mp4" muted="false"></video></div>
