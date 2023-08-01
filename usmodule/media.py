@@ -1,8 +1,8 @@
 import os
-from tqdm import tqdm
 import urllib.request
 
 import ffmpeg
+from tqdm import tqdm
 
 
 def download(url, dir):
@@ -24,13 +24,27 @@ def check():
     download('https://huggingface.co/Iceclear/StableSR/resolve/main/webui_768v_139.ckpt', sr_models)
 
 
-def extract(media_probe, media_path, frames_path, audio_path):
+def extract(media_probe, media_path, frames_path, audio_path=None, scale_factor=None):
     # extract streams from media
     input_media = ffmpeg.input(media_path)
+    if scale_factor:
+        video_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'video'), None)
+        width = video_stream['width']
+        height = video_stream['height']
+        target_width = int(width * scale_factor)
+        target_height = int(height * scale_factor)
+        # if the target width is not dividable by 8, then round it up
+        if target_width % 8 != 0:
+            target_width = target_width + 8 - target_width % 8
+        # if the target height is not dividable by 8, then round it up
+        if target_height % 8 != 0:
+            target_height = target_height + 8 - target_height % 8
+        input_media = input_media.filter('scale', width=target_width, height=target_height)
     output_streams = [input_media.output(os.path.join(frames_path, '%05d.png'), start_number=0, r=24)]
-    audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
-    if audio_stream:
-        output_streams.append(input_media.output(os.path.join(audio_path, 'audio.mp3')))
+    if audio_path:
+        audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
+        if audio_stream:
+            output_streams.append(input_media.output(os.path.join(audio_path, 'audio.mp3')))
     if len(output_streams) > 1:
         output_node = ffmpeg.merge_outputs(*output_streams)
     else:
