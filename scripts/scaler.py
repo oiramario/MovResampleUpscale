@@ -7,6 +7,8 @@ from PIL import Image
 
 import usmodule.media as media
 import usmodule.keyframe as keyframe
+import usmodule.grid as grid
+import usmodule.split as split
 import usmodule.ebsynth as ebsynth
 
 
@@ -86,7 +88,7 @@ class Scaler:
             result.image.save(os.path.join(odir, name))
 
 
-    def process_video(self, media_path, output_path, scale_factor=2.0, sampling_steps=20):
+    def process_video(self, media_path, output_path, scale_factor, sampling_steps, key_min_gap, key_max_gap, key_th):
         if not os.path.isfile(media_path) or not os.path.isdir(output_path):
             return
 
@@ -111,24 +113,35 @@ class Scaler:
             os.makedirs(scale_frames_path)
         media.extract(media_probe, media_path, scale_frames_path, None, scale_factor)
 
-        # keyframe
+        # keyframes
         keyframes_path = os.path.join(work_path, '3-keyframes')
         if not os.path.exists(keyframes_path):
             os.makedirs(keyframes_path)
-        keyframe.analyze(frames_path, keyframes_path, 8.5, 12, 48, True)
+        keyframe.analyze(frames_path, keyframes_path, key_min_gap, key_max_gap, key_th, True)
 
-        # scale keyframe
-        scale_keyframes_path = os.path.join(work_path, '4-scale_keyframes')
+        # grid
+        grid_path = os.path.join(work_path, '4-grid')
+        if not os.path.exists(grid_path):
+            os.makedirs(grid_path)
+        grid.combine(keyframes_path, grid_path)
+
+        # scale grid
+        scale_grid_path = os.path.join(work_path, '5-scale_grid')
+        if not os.path.exists(scale_grid_path):
+            os.makedirs(scale_grid_path)
+        self.process_folder(grid_path, scale_grid_path, scale_factor, sampling_steps)
+
+        # split scale keyframes
+        scale_keyframes_path = os.path.join(work_path, '6-scale_keyframes')
         if not os.path.exists(scale_keyframes_path):
             os.makedirs(scale_keyframes_path)
-        self.process_folder(keyframes_path, scale_keyframes_path, scale_factor, sampling_steps)
+        split.extract(keyframes_path, scale_grid_path, scale_keyframes_path)
 
         # ebsynth frames
-        ebsynth_frames_path = os.path.join(work_path, '5-ebsynth_frames')
+        ebsynth_frames_path = os.path.join(work_path, '7-ebsynth_frames')
         if not os.path.exists(ebsynth_frames_path):
             os.makedirs(ebsynth_frames_path)
-        ebsynth_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'usmodule', 'ebsynth.exe'))
-        ebsynth.run(scale_frames_path, scale_keyframes_path, ebsynth_frames_path, ebsynth_path)
+        ebsynth.run(scale_frames_path, scale_keyframes_path, ebsynth_frames_path)
 
         # merge new media
         output_media_file = os.path.join(output_path, f'{output_media_name}.mp4')

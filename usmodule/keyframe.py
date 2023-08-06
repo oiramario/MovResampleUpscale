@@ -6,6 +6,7 @@ import shutil
 import cv2
 import numpy as np
 
+from tqdm import tqdm
 
 #---------------------------------
 # Copied from PySceneDetect
@@ -61,34 +62,36 @@ def detect_edges(img_path):
     hue, sat, lum = cv2.split(cv2.cvtColor( im , cv2.COLOR_BGR2HSV))
     return _detect_edges(lum)
 
-def analyze(png_dir, key_dir, th, min_gap, max_gap, add_last_frame):
+def analyze(png_dir, key_dir, min_gap, max_gap, th, add_last_frame):
     keys = []
-    
+
     frames = sorted(glob.glob( os.path.join(png_dir, "[0-9]*.png") ))
-    
+
     key_frame = frames[0]
     keys.append( int(os.path.splitext(os.path.basename(key_frame))[0]) )
     key_edges = detect_edges( key_frame )
     gap = 0
-    
-    for frame in frames:
-        gap += 1
-        if gap < min_gap:
-            continue
-        
-        edges = detect_edges( frame )
-        
-        delta = mean_pixel_distance( edges, key_edges )
-        
-        _th = th * (max_gap - gap)/max_gap
-        
-        if _th < delta:
-            basename_without_ext = os.path.splitext(os.path.basename(frame))[0]
-            keys.append( int(basename_without_ext) )
-            key_frame = frame
-            key_edges = edges
-            gap = 0
-    
+
+    with tqdm(total=len(frames), unit='keyframe') as pbar:
+        for frame in frames:
+            pbar.update(1)
+            gap += 1
+            if gap < min_gap:
+                continue
+            
+            edges = detect_edges( frame )
+            
+            delta = mean_pixel_distance( edges, key_edges )
+            
+            _th = th * (max_gap - gap)/max_gap
+            
+            if _th < delta:
+                basename_without_ext = os.path.splitext(os.path.basename(frame))[0]
+                keys.append( int(basename_without_ext) )
+                key_frame = frame
+                key_edges = edges
+                gap = 0
+
     if add_last_frame:
         basename_without_ext = os.path.splitext(os.path.basename(frames[-1]))[0]
         last_frame = int(basename_without_ext)
@@ -102,7 +105,7 @@ def analyze(png_dir, key_dir, th, min_gap, max_gap, add_last_frame):
 def remove_pngs_in_dir(path):
     if not os.path.isdir(path):
         return
-    
+
     pngs = glob.glob( os.path.join(path, "*.png") )
     for png in pngs:
         os.remove(png)

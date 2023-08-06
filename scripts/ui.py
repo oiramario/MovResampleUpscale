@@ -44,7 +44,7 @@ def work_folder(src_video):
     return work_dir
 
 
-def generate(src_video, scale_factor, sampling_steps):
+def generate(src_video, scale_factor, sampling_steps, key_min_gap, key_max_gap, key_th):
     if not src_video:
         return
 
@@ -53,7 +53,7 @@ def generate(src_video, scale_factor, sampling_steps):
     low_vram = vram <= 12
     work_dir = work_folder(src_video)
     scaler = Scaler(low_vram)
-    return scaler.process_video(src_video, work_dir, scale_factor, sampling_steps)
+    return scaler.process_video(src_video, work_dir, scale_factor, sampling_steps, key_min_gap, key_max_gap, key_th)
 
 
 def interrupt():
@@ -68,8 +68,13 @@ def on_ui_tabs():
                 with gr.Row():
                     src_video = gr.Video(interactive=True, include_audio=True)
                 with gr.Row():
-                    scale_factor = gr.Slider(minimum=1, maximum=10, value=2.0, step=0.1, label='Scale factor:')
-                    sampling_steps = gr.Slider(minimum=20, maximum=100, value=20, step=1, label='Sampling steps:')
+                    with gr.Column():
+                        scale_factor = gr.Slider(minimum=1, maximum=8, value=2, step=1, label='Scale factor:')
+                        sampling_steps = gr.Slider(minimum=20, maximum=80, value=20, step=1, label='Sampling steps:')
+                    with gr.Column():
+                        key_min_gap = gr.Slider(minimum=0, maximum=500, value=5, step=1, label='Minimum keyframe gap:')
+                        key_max_gap = gr.Slider(minimum=0, maximum=1000, value=100, step=1, label='Maximum keyframe gap:')
+                        key_th = gr.Slider(minimum=0.0, maximum=100.0, value=8.5, step=0.1, label='Threshold of delta frame edge:')
                 with gr.Row():
                     btn_generate = gr.Button('Generate', variant='primary')
                     btn_interrupt = gr.Button('Interrupt')
@@ -84,7 +89,7 @@ def on_ui_tabs():
 
         btn_generate.click(
             fn=generate, 
-            inputs=[src_video, scale_factor, sampling_steps], 
+            inputs=[src_video, scale_factor, sampling_steps, key_min_gap, key_max_gap, key_th], 
             outputs=dst_video, 
             show_progress=True)
 

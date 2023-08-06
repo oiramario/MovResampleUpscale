@@ -26,21 +26,22 @@ def check():
 
 def extract(media_probe, media_path, frames_path, audio_path=None, scale_factor=None):
     # extract streams from media
+    video_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'video'), None)
+    frame_rate = int(eval(video_stream['r_frame_rate']))
     input_media = ffmpeg.input(media_path)
     if scale_factor:
-        video_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'video'), None)
         width = video_stream['width']
         height = video_stream['height']
         target_width = int(width * scale_factor)
         target_height = int(height * scale_factor)
-        # if the target width is not dividable by 8, then round it up
-        if target_width % 8 != 0:
-            target_width = target_width + 8 - target_width % 8
-        # if the target height is not dividable by 8, then round it up
-        if target_height % 8 != 0:
-            target_height = target_height + 8 - target_height % 8
+        # # if the target width is not dividable by 8, then round it up
+        # if target_width % 8 != 0:
+        #     target_width = target_width + 8 - target_width % 8
+        # # if the target height is not dividable by 8, then round it up
+        # if target_height % 8 != 0:
+        #     target_height = target_height + 8 - target_height % 8
         input_media = input_media.filter('scale', width=target_width, height=target_height)
-    output_streams = [input_media.output(os.path.join(frames_path, '%05d.png'), start_number=0, r=24)]
+    output_streams = [input_media.output(os.path.join(frames_path, '%05d.png'), start_number=0, r=frame_rate)]
     if audio_path:
         audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
         if audio_stream:
@@ -60,7 +61,9 @@ def extract(media_probe, media_path, frames_path, audio_path=None, scale_factor=
 
 def merge(media_probe, frames_path, audio_path, output_media_file):
     # merge streams to media
-    input_streams = [ffmpeg.input(os.path.join(frames_path, '%05d.png'), framerate=24)]
+    video_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'video'), None)
+    frame_rate = int(eval(video_stream['r_frame_rate']))
+    input_streams = [ffmpeg.input(os.path.join(frames_path, '%05d.png'), framerate=frame_rate)]
     audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
     if audio_stream:
         input_streams.append(ffmpeg.input(os.path.join(audio_path, 'audio.mp3')))

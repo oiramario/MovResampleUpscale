@@ -96,7 +96,9 @@ def render_frames(keyframe: str, frames: List[str], output: str, ebsynth: str, v
         keyframe = out_path
 
 
-def run(frame_path: str, keyframe_path: str, output: str, ebsynth: str, verbose: int=0):
+def run(frame_path: str, keyframe_path: str, output: str, verbose: int=0):
+    ebsynth = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'usmodule', 'ebsynth.exe'))
+
     # A list of keyframes and their positions, sorted in ascending order
     keyframes = []
     for root, _, files in os.walk(keyframe_path):
