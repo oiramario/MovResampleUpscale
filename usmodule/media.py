@@ -1,51 +1,15 @@
 import os
-import urllib.request
 
 import ffmpeg
-from tqdm import tqdm
 
 
-def download(url, dir):
-    name = os.path.basename(url)
-    path = os.path.join(dir, name)
-    if not os.path.exists(path):
-        request = urllib.request.urlopen(url)
-        total = int(request.headers.get('Content-Length', 0))
-        with tqdm(total=total, desc=f'Downloading: {name}', unit='B', unit_scale=True, unit_divisor=1024) as progress:
-            urllib.request.urlretrieve(url, path, reporthook=lambda count, block_size, total_size: progress.update(block_size))
-
-def check():
-    sd_root = os.getcwd()
-    sd_models = os.path.join(sd_root, 'models', 'Stable-diffusion')
-    download('https://huggingface.co/stabilityai/stable-diffusion-2-1/resolve/main/v2-1_768-ema-pruned.safetensors', sd_models)
-    sd_vae = os.path.join(sd_root, 'models', 'VAE')
-    download('https://huggingface.co/oiramario/StableSR/resolve/main/vqgan_cfw_00011_vae_only.ckpt', sd_vae)
-    sr_models = os.path.join(sd_root, 'extensions', 'sd-webui-stablesr', 'models')
-    download('https://huggingface.co/Iceclear/StableSR/resolve/main/webui_768v_139.ckpt', sr_models)
-
-
-def extract(media_probe, media_path, frames_path, audio_path=None, scale_factor=None):
+def extract(media_probe, media_path, frames_path, frame_rate, audio_path):
     # extract streams from media
-    video_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'video'), None)
-    frame_rate = int(eval(video_stream['r_frame_rate']))
     input_media = ffmpeg.input(media_path)
-    if scale_factor:
-        width = video_stream['width']
-        height = video_stream['height']
-        target_width = int(width * scale_factor)
-        target_height = int(height * scale_factor)
-        # # if the target width is not dividable by 8, then round it up
-        # if target_width % 8 != 0:
-        #     target_width = target_width + 8 - target_width % 8
-        # # if the target height is not dividable by 8, then round it up
-        # if target_height % 8 != 0:
-        #     target_height = target_height + 8 - target_height % 8
-        input_media = input_media.filter('scale', width=target_width, height=target_height)
-    output_streams = [input_media.output(os.path.join(frames_path, '%05d.png'), start_number=0, r=frame_rate)]
-    if audio_path:
-        audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
-        if audio_stream:
-            output_streams.append(input_media.output(os.path.join(audio_path, 'audio.mp3')))
+    output_streams = [input_media.output(os.path.join(frames_path, '%07d.png'), start_number=0, r=frame_rate)]
+    audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
+    if audio_stream:
+        output_streams.append(input_media.output(os.path.join(audio_path, 'audio.mp3')))
     if len(output_streams) > 1:
         output_node = ffmpeg.merge_outputs(*output_streams)
     else:
@@ -59,18 +23,18 @@ def extract(media_probe, media_path, frames_path, audio_path=None, scale_factor=
     )
 
 
-def merge(media_probe, frames_path, audio_path, output_media_file):
+def merge(media_probe, frames_path, audio_path, frame_rate, output_media_file):
     # merge streams to media
-    video_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'video'), None)
-    frame_rate = int(eval(video_stream['r_frame_rate']))
-    input_streams = [ffmpeg.input(os.path.join(frames_path, '%05d.png'), framerate=frame_rate)]
+    frames = os.listdir(frames_path)
+    digital_count = len(str(len(frames)))
+    input_streams = [ffmpeg.input(os.path.join(frames_path, f'resampled%0{digital_count}d.png'), framerate=frame_rate)]
     audio_stream = next((stream for stream in media_probe['streams'] if stream['codec_type'] == 'audio'), None)
     if audio_stream:
         input_streams.append(ffmpeg.input(os.path.join(audio_path, 'audio.mp3')))
     input_args = ['-hide_banner']
     (
         ffmpeg
-        .output(*input_streams, output_media_file, vcodec='libx264', pix_fmt='yuv420p')
+        .output(*input_streams, output_media_file, vcodec='libx264', pix_fmt='yuv420p', vf='scale=iw/2:ih/2')
         .overwrite_output()
         .global_args(*input_args)
         .run()
