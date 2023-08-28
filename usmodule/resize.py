@@ -8,8 +8,8 @@ def upscale(input_path, output_path):
     args = [realesrgan, 
             '-i', input_path, 
             '-o', output_path, 
-            '-n', 'realesrgan-x4plus', 
-            #'-n', 'realesr-animevideov3-x4', 
+            #'-n', 'realesrgan-x4plus', 
+            '-n', 'realesr-animevideov3-x4', 
             '-j', '1:8:4',
             #'-x'
             ]

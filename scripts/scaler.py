@@ -7,7 +7,7 @@ import usmodule.media as media
 import usmodule.keyframe as keyframe
 import usmodule.grid as grid
 import usmodule.split as split
-import usmodule.resample as resample
+import usmodule.series as series
 import usmodule.resize as resize
 import usmodule.ebsynth as ebsynth
 
@@ -43,14 +43,20 @@ class Scaler:
             os.makedirs(frames_path)
         media.extract(media_probe, media_path, frames_path, frame_rate, audio_path)
 
+        # restoration [option]
+        # restoration_path = os.path.join(work_path, '2-restoration')
+        # if not os.path.exists(restoration_path):
+        #     os.makedirs(restoration_path)
+        # series.restoration(frames_path, restoration_path)
+
         # resample
-        resample_path = os.path.join(work_path, '2-resample')
+        resample_path = os.path.join(work_path, '3-resample')
         if not os.path.exists(resample_path):
             os.makedirs(resample_path)
-        resample.series(frames_path, resample_path, frame_rate, resampled_fps)
+        series.resample(frames_path, resample_path, frame_rate, resampled_fps)
 
         # super resolution
-        super_resolution_path = os.path.join(work_path, '3-super_resolution')
+        super_resolution_path = os.path.join(work_path, '4-super_resolution')
         if not os.path.exists(super_resolution_path):
             os.makedirs(super_resolution_path)
         resize.upscale(resample_path, super_resolution_path)
