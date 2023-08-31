@@ -1,3 +1,4 @@
 # gitignore
 *.py[cod]
 __pycache__
+outputs

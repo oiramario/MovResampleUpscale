@@ -3,7 +3,7 @@ import subprocess
 
 
 def restoration(input_path, output_path):
-    vfi_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'usmodule', 'VFIformer-WebUI'))
+    vfi_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'modules', 'VFIformer-WebUI'))
     restoration_path = os.path.join(vfi_path, 'interpolate_series.py')
     args = ['python',
             restoration_path, 
@@ -25,7 +25,7 @@ def restoration(input_path, output_path):
 
 
 def resample(input_path, output_path, original_fps, resampled_fps):
-    vfi_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'usmodule', 'VFIformer-WebUI'))
+    vfi_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'modules', 'VFIformer-WebUI'))
     resample_path = os.path.join(vfi_path, 'resample_series.py')
     args = ['python',
             resample_path, 
