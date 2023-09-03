@@ -1,0 +1,6 @@
+[submodule "VFIformer-WebUI"]
+	path = VFIformer-WebUI
+	url = https://github.com/jhogsett/VFIformer-WebUI.git
+[submodule "VFIformer"]
+	path = VFIformer
+	url = https://github.com/dvlab-research/VFIformer

@@ -41,7 +41,7 @@ def generate(src_video, restoration, animvideo):
     return process_video(src_video, work_dir, restoration, animvideo)
 
 
-if __name__ == "__main__":
+def main():
     with gr.Blocks(analytics_enabled=False) as mov_upscale_interface:
         with gr.Row():
             with gr.Column():
@@ -79,3 +79,7 @@ if __name__ == "__main__":
             outputs=download_file)
 
         mov_upscale_interface.launch()
+
+
+if __name__ == "__main__":
+    main()
