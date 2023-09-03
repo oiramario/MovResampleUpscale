@@ -8,5 +8,7 @@ xcopy /S /E /Y "VFIformer\utils" "VFIformer-WebUI\utils\"
 
 conda create -y -n mru python=3.10.9
 conda activate mru
+conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch
 pip install -r VFIformer-WebUI\requirements.txt
+pip install ffmpeg-python chardet
 conda deactivate
