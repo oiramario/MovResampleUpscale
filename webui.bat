@@ -1,3 +1,3 @@
-conda activate mru
+call activate.bat mru
 python webui.py
-conda deactivate
+call deactivate.bat
